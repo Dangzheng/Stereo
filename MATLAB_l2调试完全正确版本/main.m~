@@ -1,0 +1,22 @@
+clear;clc
+data.I1 = double(rgb2gray(imread('/Users/Zheng/Documents/MATLAB/venus/im2.ppm')));%左 reference
+data.I2 = double(rgb2gray(imread('/Users/Zheng/Documents/MATLAB/venus/im6.ppm')));
+[r,c] = size(data.I1);
+baseline = 2;
+data.G = [1 0 0 -baseline;0 1 0 0;0 0 1 0];%外参
+data.K = [c 0 c/2;0 c r/2;0 0 1];%内参
+%data.d0 = ones(size(data.I1))*1.8;
+disp = double(imread('/Users/Zheng/Documents/MATLAB/venus/disp2.pgm') );
+
+data.d0 = disp2depth(disp, c, baseline);
+%data.d0 = disp;
+minalpha = 0.015;
+params.beta = 3;%平滑项系数
+params.minz = 0.8;
+params.maxz = baseline/atan(minalpha/2);
+params.scalefactor = 0.9;
+params.level_max = 100;
+params.stop_level = 1;
+params.minSize = 48;
+params.itermax = 50;
+depth = coarse2fine(data, params);
