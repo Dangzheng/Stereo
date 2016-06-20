@@ -9,7 +9,7 @@ import numpy as np
 from PyQt4 import QtGui
 import scipy.sparse as sparse
 from scipy import ndimage
-import time
+
 
 from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.backends.backend_qt4agg import NavigationToolbar2QT as NavigationToolbar
@@ -67,9 +67,6 @@ def imresize(img, sz):
     Output:
         Ir: Resized image
     """
-    '''
-    图片的放缩是先根绝放缩系数进行计算sigma然后计算坐标，最后进行双线性差值
-    '''
     if np.all(img.shape==sz):
         return img;
         
@@ -78,7 +75,7 @@ def imresize(img, sz):
     if np.any(factors < 1):               # smooth before downsampling
         sigmas = (1.0/factors)/3.0
         #print img.shape, sz, sigmas
-        I_filter = ndimage.filters.gaussian_filter(img,sigmas)#在其中也是有高斯平滑的
+        I_filter = ndimage.filters.gaussian_filter(img,sigmas)
     else:
         I_filter = img
         
@@ -97,11 +94,13 @@ def imresize(img, sz):
 
 def backproject(shape, K):
     x,y = np.meshgrid(np.arange(0, shape[1]), np.arange(0, shape[0]))
+        
     fx = K[0,0]; fy = K[1,1]; cx = K[0,2]; cy = K[1,2]
     Xn = np.ones((3, x.size))
+    
     Xn[0,:] = (x.flatten() - cx) / fx
     Xn[1,:] = (y.flatten() - cy) / fy
-    #这里第三行都是1,是标准的齐次坐标系的表示方法。 
+    
     return Xn
 
 
@@ -158,7 +157,7 @@ def make_linearOperator(shape, Xn, K):
     fx = K[0,0]
     fy = K[1,1]
     
-    x_hat = Xn[0,:]#对应文章中第（7）的公式上面的x_hat
+    x_hat = Xn[0,:]
     y_hat = Xn[1,:]
     
     Kx,Ky = make_derivatives_2D_complete(shape)       # use one-sided differences with backward diff at image border
@@ -173,7 +172,7 @@ def make_linearOperator(shape, Xn, K):
                        spXhat*Kx/fy + spYhat*Ky/fx +
                        2*spId/(fx*fy)
                         ])
-    #在此处推导出L对应文章中的第（21）的形式。
+    
     return L.tocsr()
     
     

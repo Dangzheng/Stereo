@@ -10,31 +10,27 @@ from scipy import ndimage
 
 from flowtools import to_z
 from flowtools import backproject
-import time
 
     
 def warp_zeta(Iref, I, Grel, K, zeta):
+    
     Xn = backproject(zeta.shape, K)
-    #backproject 是利用相机的内参矩阵做变换
     X = np.vstack((Xn, 1/to_z(zeta.flatten())))    # homogeneous coordinate = inverse depth
-    #相当于就是在最后一行上面都加上了每个点的深度的倒数
-    #print(Grel.shape)3x4
+    
     if Grel.shape[0] < 4:
         Grel = np.vstack((Grel, np.array([0,0,0,1])))
-    #进行补行之后Grel为4x4    
+        
     dX = np.dot(Grel[0:3,0:3], Xn)*1/to_z(zeta.flatten())   # derivative of transformation G*X
     
-    X2 = np.dot(Grel, X)             # transform point
     X2 = np.dot(Grel, X)             # transform point
     x2 = np.dot(K, X2[0:3,:])        # project to image plane
     
     x2[0,:] /= x2[2,:]             # dehomogenize
     x2[1,:] /= x2[2,:]
     Iw = ndimage.map_coordinates(I, np.vstack(np.flipud(x2[0:2,:])), order=1, cval=np.nan)
-    #flipud是实现矩阵的上下翻转
     Iw = np.reshape(Iw, I.shape)      # warped image
     gIwy,gIwx = np.gradient(Iw)
-    #这一步求x,y方向上面的梯度，对应的是文章中(38)式
+    
     fx = K[0,0]; fy = K[1,1]
     for i in range(0,3):           # dehomogenize
         X2[i,:] /= X2[3,:]

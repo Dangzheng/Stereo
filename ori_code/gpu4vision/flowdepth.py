@@ -9,27 +9,24 @@ import os, sys
 import numpy as np
 import matplotlib.pyplot as plt
 from PyQt4 import QtGui
-import scipy.io as sio
 
 import flowtools as ft
 import warping as warp
 import solver as pd
-import cv2
-import time
+
 
 def run_ctf(params, d0, data, imageWidget=None):
-    #给进来的参数，depth map的初始值，数据（图片，G，K） 
+    
     levels = (np.floor( (np.log(params['minSize'])-np.log(np.minimum(*d0.shape))) / np.log(params['scalefactor']) ) + 1).astype('int')
     levels = np.minimum(levels, params['levels'])
-    warps = params['warps']#为什么会直接就设置了一个warps
+    warps = params['warps']
     iterations = params['iterations']
     
     L = params['Lambda']          # compute lambda sequence for the levels
     Lambda = np.zeros(levels)
     for idx,l in enumerate(Lambda):
-        Lambda[idx] = L*(1.0/params['scalefactor'])**idx#此处的data term前面的系数lambda 就是我的alpha
-    #Lambda 系数还是随着迭代的level不同而在不断的变化
- 
+        Lambda[idx] = L*(1.0/params['scalefactor'])**idx
+        
     params['Lambda'] = Lambda
     dim_dual = 3        # dimension of dual variable
     
@@ -51,18 +48,15 @@ def run_ctf(params, d0, data, imageWidget=None):
             for i in range(0, dim_dual):
                 p[:,:,i] = ft.imresize(ptmp[:,:,i], level_sz)
                 
-        Xn = ft.backproject(d.shape, K)#相当于将点都利用相机内参，变换到了perspective parameterization
+        Xn = ft.backproject(d.shape, K)
         L_normal = ft.make_linearOperator(d.shape, Xn, K)
-        print(L_normal);time.sleep(9999)
-        #对应的是文章中（21）的公式L而且表示成了稀疏的形式。
                 
         img_scaled = []                    # scale all images
         for img in data['images']:
             img_scaled.append(ft.imresize(img, level_sz))
-
         
-        Iref = img_scaled[0]#此处用的是缩小size之后的图像
-        Gref = data['G'][0]#此处的G为文章中提及的两个pi中间夹的g的取值。4x4
+        Iref = img_scaled[0]
+        Gref = data['G'][0]
         
             
         for k in range(1,warps+1):
@@ -71,8 +65,6 @@ def run_ctf(params, d0, data, imageWidget=None):
             warpdata = []                       # warp all images
             for img,g in zip(img_scaled[1:], data['G'][1:]):
                 Grel = ft.relative_transformation(Gref, g)
-                #此处的Grel是左右两个相机之间的相对关系，就是左相机转换到右相机坐标系的转换矩阵
-                print(d)
                 warpdata.append(warp.warp_zeta(Iref, img, Grel, K, ft.to_zeta(d)))
                 
             d,p,energy = pd.solve_area_pd(warpdata, d, p, iterations, params, params['Lambda'][level], L_normal, imageWidget)
@@ -94,24 +86,16 @@ if __name__ == '__main__':
         imageWidget = None    
         
     npz = np.load('data.npz')
-    images = [npz['I1'], npz['I2']]; G = [npz['G1'], npz['G2']]#这个G是一个4x4的矩阵，到底是存储着什么值？
-    data = dict(images=images, G=G, K=npz['K'])#内参矩阵K
+    images = [npz['I1'], npz['I2']]; G = [npz['G1'], npz['G2']]
+    data = dict(images=images, G=G, K=npz['K'])
     d_init = 1.8
     
     I1 = data['images'][0]; I2 = data['images'][1]; K = data['K']
-    '''
-    G1 = data['G'][0]
-    G2 = data['G'][1]
-    print(G1,G2)
-    sio.savemat('G2.mat',{'G2':G2})
-    print('done!')
-    time.sleep(9999)
-    '''
-    d0 = np.ones(I1.shape)*d_init#depth图初始化的值
+    d0 = np.ones(I1.shape)*d_init
 
     minalpha = 0.015             # 3d points must be seen at least under this angle
     maxz = ft.camera_baseline(data['G'][0], data['G'][1])/np.arctan(minalpha/2)    # compute depth value
-    #这里计算了depth的最大的深度，但是为什么是计算出来的最大的深度？ 
+    
     params = dict(warps=15,
                   iterations=20,
                   scalefactor=0.75,
@@ -133,4 +117,5 @@ if __name__ == '__main__':
     plt.figure('I2'); plt.imshow(I2, cmap='gray'); plt.title('Image 2')
        
     d = run_ctf(params, d0, data, imageWidget)
-
+    #plt.figure(); plt.imshow(d); plt.colorbar(); plt.title('result')
+    

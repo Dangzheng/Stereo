@@ -10,13 +10,14 @@ import numpy as np
 from flowtools import huber_function
 from flowtools import to_z
 from flowtools import to_zeta
-import time
+
 
 def solve_area_pd(warpdata, d0, p, iterations, params, Lambda, L, imagewidget=None):
     numviews = len(warpdata)
-
+    
     check = params['check']
-    epsilon = params['epsilon']#这个和huber function有关
+    epsilon = params['epsilon']
+    
     Iw = warpdata[0][0]
     It = warpdata[0][1]
     Ig = warpdata[0][2]
@@ -55,7 +56,7 @@ def solve_area_pd(warpdata, d0, p, iterations, params, Lambda, L, imagewidget=No
         zeta_ = zeta.copy()      # remember zeta
         zeta = zeta.flatten()
         
-        zeta -= tau*(L.T*p)       # primal update (26)
+        zeta -= tau*(L.T*p)       # primal update
         zeta = np.reshape(zeta, zeta0.shape)
         tau = np.reshape(tau, zeta0.shape)    # prox
         r = It + Ig*(zeta-zeta0)
@@ -76,9 +77,8 @@ def solve_area_pd(warpdata, d0, p, iterations, params, Lambda, L, imagewidget=No
         grad = np.reshape(grad, (3,-1))
         normgrad = np.sqrt(grad[0,:]**2 + grad[1,:]**2 + grad[2,:]**2)
         r = huber_function(It+(zeta-zeta0)*Ig, epsilon)
-        #这一步就是求残差的步骤
         energy.append(normgrad.sum() + Lambda*r.sum())        
-        #计算能量函数就是很简单的将所有位置上的残差乘以lambda再加和
+                
         if k % check == 0:
             print 'iter ', k, ' energy ', energy[-1]
             if imagewidget is not None:
