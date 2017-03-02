@@ -1,23 +1,28 @@
 # Stereo
-这里的代码都是与stereo相关的代码，包括自己制作的数据集，以及练习所写的代码。
+The repository contains code about stereo and some practise. Dataset generate code made by myself.
 
 ## matlab-test-dataset
 
-这个文件夹下含有的是我利用matlab所合成的两个平面，一个是在前的**斜面**，另一个是背景的**平面**，含有**相机的内外参**，以及**groundtruth**数据。
+This folder contains matlab code for generating synthetic plane, slanted plane as foreground, background plane, intrinsic parametes, external parameters and groundtruth.
 
-编写的语言自然是matlab，使用的版本是Mac上的matlab 2015。
+## matlab-l2norm-minimun surface
 
-##matlab-l2norm-minimun surface
+This part of code using l2-norm and gradient descent，the regular item of the perspective model realizing by minimizing the surface area was used in this paper. While I utilized in this place is just l2-norm,not l2，1-norm in the paper，for the simply implementation of l2-norm, which can be solved by Gradient Descent Method，instead of primal-dual. This can help test for correctness of other place in code. The reason why I choose to rewrite to the version of matlab is that it is so convenient to debug.
 
-这个代码对应的是**Efficient Minimal-Surface Regularizationof Perspective Depth Maps in Variational Stereo**，这篇文章采用的是最小化曲面面积实现的透视模型的正则项，此处我使用的是仅仅是简单的l2-norm,而非作者使用的l2，1-norm，主要是因为l2-norm 实现简单，可以使用梯度下降法去求解，而不是采用复杂的primal-dual，可以帮助去测试代码中别的部分是否正确，之所以将其改写为matlab，是因为matlab调试的时候实在是太轻松了。
-l0-norm是想使用零范数去实现的失败版本，l2-norm6等也是同样。
+**Efficient Minimal-Surface Regularizationof Perspective Depth Maps in Variational Stereo**
 
-##matlab-minimum surface
+## matlab-minimum surface
 
-这个代码对应的是**Efficient Minimal-Surface Regularizationof Perspective Depth Maps in Variational Stereo**仅仅是实现了用matlab改写的过程，后续会使用自己的数据集进行测试。
-
+This code is corresponding to **Efficient Minimal-Surface Regularizationof Perspective Depth Maps in Variational Stereo**
+
+I just rewrite it by matlab.
 ## python-l0smooth
-这个代码是对应**Image Smoothing via L0 Gradient Minimization**，其中原作者给出的代码是matlab所写的，这里因为需要就将其改写成了python版本。
+This code is corresponding to **Image Smoothing via L0 Gradient Minimization**. I use python to rewrite it.
 
-其中使用的opencv库都是直接用anaconda管理的，下载更新都十分的方便。
+## myself-dataset-test-minimal-surface
+This fold loads the pictures producting by my own，testing on code minimal-surface，using the author's python code，editting in pycharm。
 
+The final reason for the problem is normalization problem，the operating range in author's code is [0.8, 2.48]，as for the reason why it can only be calculated in such small depth range, it needed for further study.
+
+## middlebury_minimal_surface
+This fold loads the python code either，which is the non GPU version published by author. The test dataset is Middlebury Stereo 2014. The unit using in this dataset is the ddcimal inch. I should try to convert it. At the same time it is confused that why it only can be calculated in small range in author's code.
